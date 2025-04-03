@@ -15,26 +15,31 @@ def binary_search(arr, target):
 
 # бинарное дерево поиска
 class Node:
-    def __init__(self, key):
+    def __init__(self, key, index):
         self.left = None
         self.right = None
         self.val = key
+        self.index = index  # Добавляем поле для хранения индекса
 
-def insert(root, key):
+def tree_insert(root, key, index):
     if root is None:
-        return Node(key)
+        return Node(key, index)  # При вставке сохраняем индекс
     if key < root.val:
-        root.left = insert(root.left, key)
+        root.left = tree_insert(root.left, key, index)
     else:
-        root.right = insert(root.right, key)
+        root.right = tree_insert(root.right, key, index)
     return root
 
-def search(root, key):
-    if root is None or root.val == key:
-        return root
+def tree_search(root, key):
+    if root is None:
+        return None  # Если элемент не найден, возвращаем None
+    if root.val == key:
+        return root.index  # Возвращаем индекс найденного узла
+
     if key < root.val:
-        return search(root.left, key)
-    return search(root.right, key)
+        return tree_search(root.left, key)
+    return tree_search(root.right, key)
+
 
 
 
@@ -72,7 +77,7 @@ def fibonacci_search(arr, target):
 def interpolation_search(arr, target):
     low, high = 0, len(arr) - 1
     while low <= high and target >= arr[low] and target <= arr[high]:
-        pos = low + ((high - low) // (arr[high] - arr[low] + 1) * (target - arr[low]))
+        pos = low + ((high - low) // (arr[high] - arr[low]) * (target - arr[low]))
 
         if arr[pos] == target:
             return pos
@@ -88,22 +93,14 @@ class SimpleRehash:
         self.size = size
         self.table = [None] * size
 
-    def hash(self, key):
+    def re_hash(self, key):
         return key % self.size
 
-    def insert(self, key):
-        index = self.hash(key)
+    def re_insert(self, key):
+        index = self.re_hash(key)
         while self.table[index] is not None:
             index = (index + 1) % self.size
         self.table[index] = key
-
-    def search(self, key):
-        index = self.hash(key)
-        while self.table[index] is not None:
-            if self.table[index] == key:
-                return index
-            index = (index + 1) % self.size
-        return -1
 
 # рехэширование с помощью псевдослучайных чисел
 class RandomRehash:
@@ -111,24 +108,16 @@ class RandomRehash:
         self.size = size
         self.table = [None] * size
 
-    def hash(self, key):
+    def pre_hash(self, key):
         return key % self.size
 
-    def insert(self, key):
-        index = self.hash(key)
+    def pre_insert(self, key):
+        index = self.pre_hash(key)
         step = random.randint(1, self.size - 1)
         while self.table[index] is not None:
             index = (index + step) % self.size
         self.table[index] = key
 
-    def search(self, key):
-        index = self.hash(key)
-        step = random.randint(1, self.size - 1)
-        while self.table[index] is not None:
-            if self.table[index] == key:
-                return index
-            index = (index + step) % self.size
-        return -1
 # метод цепочек
 class ChainHash:
     def __init__(self, size):
@@ -141,13 +130,6 @@ class ChainHash:
     def insert(self, key):
         index = self.hash(key)
         self.table[index].append(key)
-
-    def search(self, key):
-        index = self.hash(key)
-        for item in self.table[index]:
-            if item == key:
-                return True
-        return False
 
 # задача о 8 ферзях
 def is_safe(board, row, col, n):
@@ -172,32 +154,46 @@ def solve_n_queens(n, row=0, board=[]):
 if __name__ == "__main__":
     arr = sorted(random.sample(range(100), 10))
     target = arr[len(arr) // 2]
-
-
     print(f"Массив: {arr}")
+
+
     print(f"Бинарный поиск: {binary_search(arr, target)}")
 
     root = None
-    for num in arr:
-        root = insert(root, num)
-    index = binary_search(arr, target)
-    if index != -1:
-        print(f"Число {target} найдено в массиве на позиции {index}.")
+    for index, num in enumerate(arr):
+        root = tree_insert(root, num, index)
+    result = tree_search(root, target)
+    if result is not None:
+        print(f"Число {target} найдено в бинарном дереве, индекс: {result}")
     else:
-        print(f"Число {target} не найдено в массиве.")
+        print(f"Число {target} не найдено в бинарном дереве.")
+
 
     print(f"Фибоначчиев поиск: {fibonacci_search(arr, target)}")
+
+
     print(f"Интерполяционный поиск: {interpolation_search(arr, target)}")
 
-    hash_table = SimpleRehash(10)
-    for num in arr:
-        hash_table.insert(num)
-    print(f"Простое рехэширование поиск: {hash_table.search(target)}")
+    print("Простое рехэширование:")
+    simple_rehash = SimpleRehash(10)
+    simple_rehash.re_insert(10)
+    simple_rehash.re_insert(20)
+    simple_rehash.re_insert(30)
+    print(simple_rehash.table)
 
-    hash_table2 = ChainHash(10)
-    for num in arr:
-        hash_table2.insert(num)
-    print(f"Метод цепочек поиск: {hash_table2.search(target)}")
+    print("Рехэширование с помощью псевдослучайных чисел:")
+    random_rehash = RandomRehash(10)
+    random_rehash.pre_insert(10)
+    random_rehash.pre_insert(20)
+    random_rehash.pre_insert(30)
+    print(random_rehash.table)
+
+    print("Метод цепочек:")
+    chain_hash = ChainHash(10)
+    chain_hash.insert(10)
+    chain_hash.insert(20)
+    chain_hash.insert(30)
+    print(chain_hash.table)
 
     solutions = solve_n_queens(8)
     print(f"Решение задачи о 8 ферзях : {solutions[0]}")
