@@ -19,11 +19,10 @@ class Node:
         self.left = None
         self.right = None
         self.val = key
-        self.index = index  # Добавляем поле для хранения индекса
-
+        self.index = index
 def tree_insert(root, key, index):
     if root is None:
-        return Node(key, index)  # При вставке сохраняем индекс
+        return Node(key, index)
     if key < root.val:
         root.left = tree_insert(root.left, key, index)
     else:
@@ -32,9 +31,9 @@ def tree_insert(root, key, index):
 
 def tree_search(root, key):
     if root is None:
-        return None  # Если элемент не найден, возвращаем None
+        return None
     if root.val == key:
-        return root.index  # Возвращаем индекс найденного узла
+        return root.index
 
     if key < root.val:
         return tree_search(root.left, key)
